@@ -1,0 +1,12 @@
+name: Projekt1
+channels:
+  - defaults
+dependencies:
+  - python=3.8.2
+  - numpy
+  - opencv=4.0.1
+  - matplotlib
+  - scipy
+  - libopencv=4.0.1
+  - py-opencv=4.0.1
+prefix: E:\anaconda3\envs\Projekt1

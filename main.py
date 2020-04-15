@@ -97,31 +97,28 @@ def findSimilar(finalImages):
             else:
                 pixelStd.append((j, 1000000))
         pixelsStd[i] = pixelStd
-    toRet = ''
+
     for i in range(len(pixelsStd)):
+        toRet = ''
         sortedPixelsStd = (sorted(pixelsStd[i], key=lambda x: x[1]))
-        for j in sortedPixelsStd:
-            toRet += str(j[0]) + ' '
-        toRet += '\n'
-    print(toRet)
+        for j in  range(len(sortedPixelsStd)-1):
+            toRet = toRet + str(sortedPixelsStd[j][0]) + ' ' if j != len(sortedPixelsStd)-2 else toRet + str(sortedPixelsStd[j][0])
+        print(toRet)
 
 
 def doMagic(directory, n, showImages):
     finalImages = []
 
     for i in range(0, n):
-        try:
-            path = os.path.normpath(directory + '/' + str(i) + '.png')
-            img = cv2.imread(path, 0)
-            img_rotated = rotateImage(img.copy())
-            img_cropped = cropImage(img_rotated.copy())
-            img_final = resizeImage(img_cropped.copy())
-            img_final = fixRotation(img_final)
-            if showImages:
-                showStepImages([img, img_rotated, img_cropped, img_final])
-            finalImages.append(img_final)
-        except:
-            print('Some error occured while processing image ', i)
+        path = os.path.normpath(directory + '/' + str(i) + '.png')
+        img = cv2.imread(path, 0)
+        img_rotated = rotateImage(img.copy())
+        img_cropped = cropImage(img_rotated.copy())
+        img_final = resizeImage(img_cropped.copy())
+        img_final = fixRotation(img_final)
+        if showImages:
+            showStepImages([img, img_rotated, img_cropped, img_final])
+        finalImages.append(img_final)
 
     findSimilar(finalImages)
 
