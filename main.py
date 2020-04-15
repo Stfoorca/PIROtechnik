@@ -1,7 +1,6 @@
 import sys
 import os
 import cv2
-import matplotlib.pyplot as plt
 from scipy import ndimage
 import numpy as np
 from collections import defaultdict
@@ -26,13 +25,7 @@ def rotateImage(image):
 def cropImage(img):
     _, img_rotated = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(img_rotated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cntNumber = 0
-    for j in contours:
-        if len(j) >= 20:
-            break
-        else:
-            cntNumber += 1
-    cnt = contours[cntNumber]
+    cnt = max(contours, key=cv2.contourArea)
     x, y, w, h = cv2.boundingRect(cnt)
 
     img_cropped = img_rotated[y:y + h, x:x + w].copy()
@@ -44,24 +37,8 @@ def resizeImage(img):
     return img
 
 
-def showStepImages(images):
-    fig = plt.figure()
-    ax1 = fig.add_subplot(221)
-    ax1.imshow(images[0], cmap='gray')
-    plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-    ax2 = fig.add_subplot(222)
-    ax2.imshow(images[1], cmap='gray')
-    plt.title('Rotated Image'), plt.xticks([]), plt.yticks([])
-    ax3 = fig.add_subplot(223)
-    ax3.imshow(images[2], cmap='gray')
-    plt.title('Cropped Image'), plt.xticks([]), plt.yticks([])
-    ax4 = fig.add_subplot(224)
-    ax4.imshow(images[3], cmap='gray')
-    plt.title('Final Image'), plt.xticks([]), plt.yticks([])
-
-
 def fixRotation(image):
-    mask = np.uint8(np.where(image >= 10, 1, 0))
+    mask = np.uint8(np.where(image >= 10, 0, 1))
     row_counts = cv2.reduce(mask, 1, cv2.REDUCE_SUM, dtype=cv2.CV_32SC1)
     col_counts = cv2.reduce(mask, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32SC1)
     rows = row_counts.flatten().tolist()
@@ -106,22 +83,20 @@ def findSimilar(finalImages):
         print(toRet)
 
 
-def doMagic(directory, n, showImages):
+def doMagic(directory, n):
     finalImages = []
-
     for i in range(0, n):
-        path = os.path.normpath(directory + '/' + str(i) + '.png')
-        img = cv2.imread(path, 0)
-        img_rotated = rotateImage(img.copy())
-        img_cropped = cropImage(img_rotated.copy())
-        img_final = resizeImage(img_cropped.copy())
-        img_final = fixRotation(img_final)
-        if showImages:
-            showStepImages([img, img_rotated, img_cropped, img_final])
-        finalImages.append(img_final)
-
+        try:
+            path = os.path.normpath(directory + '/' + str(i) + '.png')
+            img = cv2.imread(path, 0)
+            img_rotated = rotateImage(img.copy())
+            img_cropped = cropImage(img_rotated.copy())
+            img_final = resizeImage(img_cropped.copy())
+            img_final = fixRotation(img_final)
+            finalImages.append(img_final)
+        except:
+            finalImages.append(img)
     findSimilar(finalImages)
-
 
 if __name__ == "__main__":
     directory = sys.argv[1]
@@ -129,9 +104,7 @@ if __name__ == "__main__":
     no_files = len([image for image in os.listdir(directory) if image.endswith('.png')])
     if n < 0:
         n = 0
-        print('N musi byc wieksze lub rowne 0')
         pass
     elif n > no_files:
-        print('Zbyt wysoka wartosc N, zmniejszona do ilosci obrazow w folderze')
         n = no_files
-    doMagic(directory, n, True)
+    doMagic(directory, n)
